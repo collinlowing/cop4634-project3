@@ -113,10 +113,10 @@ int running;
  * and goes back to sleep. If the cat sees enough lizards it "plays" with them.
  */
 class Cat {
-	
+
 	int       _id;        // the Id of the cat
 	thread    _catThread; // the thread simulating the cat
-	
+
 	public:
 		Cat (int id);
 		int getId();
@@ -130,16 +130,16 @@ class Cat {
   *
   * This simulates a cat that is sleeping and occasionally checking on
   * the driveway on lizards.
-  * 
+  *
   * @param theCat - the cat that is being run concurrently
-  * 
+  *
   * @return - N/A
   *
   * Status: Incomplete - Make changes as you see are necessary.
   */
 void catThread ( Cat &theCat )
 {
-	
+
 	if (debug)
     {
 		cout << "[" << theCat.getId() << "] cat is alive\n";
@@ -191,12 +191,12 @@ int Cat::getId()
  * 
  * Status: Incomplete - Make changes to this code.
  */
- void Cat::run() 
+ void Cat::run()
  {
-	 // launch the thread to simulate the cat's behavior	 
-	 
+	 // launch the thread to simulate the cat's behavior
+
  }
- 
+
  /**
   * Waits for a cat to finish running.
   *
@@ -206,8 +206,8 @@ int Cat::getId()
  {
 	 // wait for the thread to terminate
  }
- 
- 
+
+
 /**
  * Simulate a cat sleeping for a random amount of time
  *
@@ -236,7 +236,7 @@ void Cat::sleepNow()
 		cout << flush;
     }
 }
- 
+
 
 class Lizard {
 	int    _id;      // the Id of the lizard
@@ -255,22 +255,22 @@ class Lizard {
 		void crossMonkeyGrass2Sago();
 		void madeIt2Sago();
 		void sleepNow();
-	
+
 };
 
 /**
   * Follows the algorithm provided in the assignment
   * description to simulate lizards crossing back and forth
-  * between a sago palm and some monkey grass. 
-  *  
+  * between a sago palm and some monkey grass.
+  *
   * @param aLizard - the lizard to be executed concurrently
   *
   * @return N/A
-  
+
   * Status: Incomplete - Make changes as you see are necessary.
   */
 void runThread( Lizard &aLizard )
-{	
+{
 	if (debug)
     {
       cout << "[" << aLizard.getId() << "] lizard is alive" << endl;
@@ -279,11 +279,11 @@ void runThread( Lizard &aLizard )
 
 	while(running)
     {
-      /* 
+      /*
        * Follow the algorithm given in the assignment
        * using calls to the functions declared above.
        * You'll need to complete the implementation of
-       * some functions by filling in the code.  Some  
+       * some functions by filling in the code.  Some
        * are already completed - see the comments.
        */
 
@@ -334,11 +334,11 @@ int Lizard::getId()
  * 
  * Status: Incomplete - Make changes to this code.
  */
- void Lizard::run() 
+ void Lizard::run()
  {
 	 // launch the thread to simulate the lizard's behavior
  }
- 
+
  /**
   * Waits for a lizard to finish running.
   *
@@ -347,9 +347,9 @@ int Lizard::getId()
  void Lizard::wait()
  {
 	 // wait for the thread to terminate
-	 
+
  }
- 
+
 
 
 
@@ -383,7 +383,7 @@ void Lizard::sleepNow()
 
 
 
- 
+
 /**
  *
  * Returns when it is safe for this lizard to cross from the sago
@@ -400,7 +400,7 @@ void Lizard::sago2MonkeyGrassIsSafe()
 		cout << flush;
     }
 
-	
+
 
 
 	if (debug)
@@ -555,7 +555,7 @@ void Lizard::crossMonkeyGrass2Sago()
      */
 	numCrossingMonkeyGrass2Sago++;
 
-  
+
     /*
      * Check for lizards cross both ways
      */
@@ -597,7 +597,7 @@ void Lizard::madeIt2Sago()
     }
 }
 
- 
+
 
 
 
@@ -615,7 +615,7 @@ int main(int argc, char **argv)
 	 * Declare local variables
      */
 
-
+	std::cout << "hello world!" << std::endl;
 
 
 	/*
@@ -652,13 +652,13 @@ int main(int argc, char **argv)
      * Create NUM_LIZARDS lizard threads
      */
 	Lizard** allLizards = new Lizard*[NUM_LIZARDS];
-    
+
     allLizards[0] = new Lizard(0);
 
     /*
      * Create NUM_CATS cat threads
      */
-	 
+
 
 	/*
 	 * Run NUM_LIZARDS and NUM_CATS threads
@@ -689,13 +689,13 @@ int main(int argc, char **argv)
 	/*
      * Delete the locks and semaphores
      */
-	 
-	 
-	 
+
+
+
 	/*
 	 * Delete all cat and lizard objects
 	 */
-	 
+
 	delete allLizards[0];
 	delete allLizards;
 
