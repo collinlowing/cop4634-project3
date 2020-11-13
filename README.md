@@ -1,4 +1,4 @@
-### COP4634 Sys & Net I Project 3
+# COP4634 Sys & Net I Project 3
 ## TODO List
 1. Create N threads for each lizard
 2. Create 2 more threads for the number of cats
