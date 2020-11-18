@@ -24,6 +24,7 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <condition_variable> // CL
 
 
 using namespace std;
@@ -45,54 +46,58 @@ using namespace std;
  * Make this 1 to check for lizards travelling in both directions
  * Leave it 0 to allow bidirectional travel
  */
-#define UNIDIRECTIONAL       0
+#define UNIDIRECTIONAL       	0
 
 /*
  * Set this to the number of seconds you want the lizard world to
  * be simulated.  
  * Try 30 for development and 120 for more thorough testing.
  */
-#define WORLDEND             30
+#define WORLDEND             	30
 
 /*
  * Number of lizard threads to create
  */
-#define NUM_LIZARDS          20
+#define NUM_LIZARDS          	20
 
 /*
  * Number of cat threads to create
  */
-#define NUM_CATS             2
+#define NUM_CATS             	2
 
 /*	
  * Maximum lizards crossing at once before alerting cats
  */
-#define MAX_LIZARD_CROSSING  4
+#define MAX_LIZARD_CROSSING  	4
 
 /*
  * Maximum seconds for a lizard to sleep
  */
-#define MAX_LIZARD_SLEEP     3
+#define MAX_LIZARD_SLEEP_TIME   3 // CL
 
 /*
  * Maximum seconds for a cat to sleep
  */
-#define MAX_CAT_SLEEP        3
+#define MAX_CAT_SLEEP_TIME      3 // CL
 
 /*
  * Maximum seconds for a lizard to eat
  */
-#define MAX_LIZARD_EAT       5
+#define MAX_LIZARD_EAT_TIME  	5 // CL
 
 /*
  * Number of seconds it takes to cross the driveway
  */
-#define CROSS_SECONDS        2
+#define CROSS_SECONDS        	2
 
 
 /*
  * Declare global variables here
  */
+
+std::mutex mtx; // CL
+std::condition_variable cv; // CL
+int currentID;
 
 /**************************************************/
 /* Please leave these variables alone.  They are  */
@@ -100,10 +105,10 @@ using namespace std;
 /* program.  They should only be used in the code */
 /* I have provided.                               */
 /**************************************************/
-int numCrossingSago2MonkeyGrass;
-int numCrossingMonkeyGrass2Sago;
-int debug;
-int running;
+int numCrossingSago2MonkeyGrass = 0; // CL
+int numCrossingMonkeyGrass2Sago = 0; // CL
+bool debug = false; // CL
+bool running = true; // CL
 /**************************************************/
 
 
@@ -149,8 +154,6 @@ void catThread ( Cat &theCat )
 	while(running)
     {
 		theCat.sleepNow();
-
-
 
 		/*
 	     * Check for too many lizards crossing
@@ -220,7 +223,7 @@ void Cat::sleepNow()
 {
 	int sleepSeconds;
 
-	sleepSeconds = 1 + (int)(random() / (double)RAND_MAX * MAX_CAT_SLEEP);
+	sleepSeconds = 1 + (int)(random() / (double)RAND_MAX * MAX_CAT_SLEEP_TIME);
 
 	if (debug)
     {
@@ -241,6 +244,7 @@ void Cat::sleepNow()
 class Lizard {
 	int    _id;      // the Id of the lizard
 	thread _aLizard; // the thread simulating the lizard
+	std::unique_lock<std::mutex> ulock(mtx); // CL
 
 	public:
 		Lizard(int id);
@@ -287,22 +291,16 @@ void runThread( Lizard &aLizard )
        * are already completed - see the comments.
        */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		/**** CL start ****/
+		aLizard.sleepNow();
+		aLizard.sago2MonkeyGrassIsSafe();
+		aLizard.crossSago2MonkeyGrass();
+		aLizard.madeIt2MonkeyGrass();
+		aLizard.eat();
+		aLizard.monkeyGrass2SagoIsSafe();
+		aLizard.crossMonkeyGrass2Sago();
+		aLizard.madeIt2Sago();
+		/**** CL end ****/
 
     }
 
@@ -347,6 +345,9 @@ int Lizard::getId()
  void Lizard::wait()
  {
 	 // wait for the thread to terminate
+	 /**** CL start ****/
+
+	 /**** CL end ****/
 
  }
 
@@ -364,7 +365,7 @@ void Lizard::sleepNow()
 {
 	int sleepSeconds;
 
-	sleepSeconds = 1 + (int)(random() / (double)RAND_MAX * MAX_LIZARD_SLEEP);
+	sleepSeconds = 1 + (int)(random() / (double)RAND_MAX * MAX_LIZARD_SLEEP_TIME);
 
 	if (debug)
     {
@@ -400,8 +401,7 @@ void Lizard::sago2MonkeyGrassIsSafe()
 		cout << flush;
     }
 
-
-
+	Lizard::wait(); // CL
 
 	if (debug)
     {
@@ -487,7 +487,7 @@ void Lizard::eat()
 {
 	int eatSeconds;
 
-	eatSeconds = 1 + (int)(random() / (double)RAND_MAX * MAX_LIZARD_EAT);
+	eatSeconds = 1 + (int)(random() / (double)RAND_MAX * MAX_LIZARD_EAT_TIME);
 
 	if (debug)
     {
@@ -523,9 +523,13 @@ void Lizard::monkeyGrass2SagoIsSafe()
 		cout << flush;
     }
 
-
-
-
+	/*
+	std::unique_lock<std::mutex> lck(mtx);
+	while(num != current || !ready)
+	{
+		cv.wait(lck);
+	}
+	*/
 
 	if (debug)
     {
@@ -614,14 +618,14 @@ int main(int argc, char **argv)
 	/*
 	 * Declare local variables
      */
-
-	std::cout << "hello world!" << std::endl;
-
+	/**** CL start ****/
+	std::thread allThreads[NUM_LIZARDS + NUM_CATS];
+	/**** CL end ****/
 
 	/*
      * Check for the debugging flag (-d)
      */
-	debug = 0;
+	debug = false; // CL
 	if (argc > 1)
 		if (strncmp(argv[1], "-d", 2) == 0)
 			debug = 1;
@@ -632,7 +636,7 @@ int main(int argc, char **argv)
      */
 	numCrossingSago2MonkeyGrass = 0;
 	numCrossingMonkeyGrass2Sago = 0;
-	running = 1;
+	running = true; // CL
 
 
 	/*
@@ -653,17 +657,41 @@ int main(int argc, char **argv)
      */
 	Lizard** allLizards = new Lizard*[NUM_LIZARDS];
 
-    allLizards[0] = new Lizard(0);
+	/**** CL start ****/
+	for(int i = 0; i < NUM_LIZARDS; i++)
+	{
+		allLizards[i] = new Lizard(i);
+	}
+	/**** CL end ****/
 
     /*
      * Create NUM_CATS cat threads
      */
 
+	/**** CL start ****/
+	Cat** allCats = new Cat*[NUM_CATS];
+
+	for(int i = 0; i < NUM_CATS; i++)
+	{
+		allCats[i] = new Cat(i);
+	}
+	/**** CL end ****/
 
 	/*
 	 * Run NUM_LIZARDS and NUM_CATS threads
 	 */
 
+	/**** CL start ****/
+	for(int i = 0; i < NUM_LIZARDS; i++)
+	{
+		allThreads[i](runThread, allLizards[i]);
+	}
+
+	for(int i = 0; i < NUM_CATS; i++)
+	{
+		allThreads[i + NUM_LIZARDS](catThread, allCats[i]);
+	}
+	/**** CL end ****/
 
 	/*
      * Now let the world run for a while
@@ -674,12 +702,19 @@ int main(int argc, char **argv)
 	/*
      * That's it - the end of the world
      */
-	running = 0;
+	running = false; // CL
 
 
     /*
      * Wait until all threads terminate
      */
+
+	/**** CL start ****/
+	for(int i = 0; i < NUM_LIZARDS; i++)
+	{
+		allThreads[i].join();
+	}
+	/**** CL end ****/
 
 
 
@@ -695,8 +730,18 @@ int main(int argc, char **argv)
 	/*
 	 * Delete all cat and lizard objects
 	 */
+	/**** CL start ****/
+	for(int i = 0; i < NUM_LIZARDS; i++)
+	{
+		delete allLizards[i];
+	}
 
-	delete allLizards[0];
+	for(int i = 0; i < NUM_CATS; i++)
+	{
+		delete allCats[i];
+	}
+	delete allCats;
+	/**** CL end ****/
 	delete allLizards;
 
 
