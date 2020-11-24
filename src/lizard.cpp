@@ -24,7 +24,9 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
-#include <condition_variable> // CL
+
+#include "semaphore.hpp" // CL
+
 
 
 using namespace std;
@@ -95,8 +97,8 @@ using namespace std;
  * Declare global variables here
  */
 
-std::mutex mtx; // CL
-std::condition_variable cv; // CL
+Semaphore lizardSemaphore(MAX_LIZARD_CROSSING); // CL
+
 int currentID;
 
 /**************************************************/
@@ -244,7 +246,6 @@ void Cat::sleepNow()
 class Lizard {
 	int    _id;      // the Id of the lizard
 	thread _aLizard; // the thread simulating the lizard
-	std::unique_lock<std::mutex> ulock(mtx); // CL
 
 	public:
 		Lizard(int id);
@@ -292,14 +293,14 @@ void runThread( Lizard &aLizard )
        */
 
 		/**** CL start ****/
-		aLizard.sleepNow();
-		aLizard.sago2MonkeyGrassIsSafe();
-		aLizard.crossSago2MonkeyGrass();
-		aLizard.madeIt2MonkeyGrass();
-		aLizard.eat();
-		aLizard.monkeyGrass2SagoIsSafe();
-		aLizard.crossMonkeyGrass2Sago();
-		aLizard.madeIt2Sago();
+		aLizard.sleepNow(); // lizard sleeps
+		aLizard.sago2MonkeyGrassIsSafe(); // checks if safe to cross to monkey grass
+		aLizard.crossSago2MonkeyGrass(); // crosses to monkey grass
+		aLizard.madeIt2MonkeyGrass(); // signals that done
+		aLizard.eat(); // eats and waits
+		aLizard.monkeyGrass2SagoIsSafe(); //checks if it is safe to return home
+		aLizard.crossMonkeyGrass2Sago(); //crosses the road
+		aLizard.madeIt2Sago(); //waits at home
 		/**** CL end ****/
 
     }
@@ -345,9 +346,7 @@ int Lizard::getId()
  void Lizard::wait()
  {
 	 // wait for the thread to terminate
-	 /**** CL start ****/
 
-	 /**** CL end ****/
 
  }
 
@@ -401,7 +400,7 @@ void Lizard::sago2MonkeyGrassIsSafe()
 		cout << flush;
     }
 
-	Lizard::wait(); // CL
+	lizardSemaphore.wait(); // CL
 
 	if (debug)
     {
@@ -472,7 +471,7 @@ void Lizard::madeIt2MonkeyGrass()
     }
 
 
-
+	lizardSemaphore.signal(); // CL
 
 
 }
@@ -523,13 +522,7 @@ void Lizard::monkeyGrass2SagoIsSafe()
 		cout << flush;
     }
 
-	/*
-	std::unique_lock<std::mutex> lck(mtx);
-	while(num != current || !ready)
-	{
-		cv.wait(lck);
-	}
-	*/
+	lizardSemaphore.wait();
 
 	if (debug)
     {
@@ -599,6 +592,8 @@ void Lizard::madeIt2Sago()
 		cout << "[" << _id << "] made the  monkey grass -> sago  crossing" << endl;
 		cout << flush;
     }
+
+	lizardSemaphore.signal();
 }
 
 
@@ -682,14 +677,16 @@ int main(int argc, char **argv)
 	 */
 
 	/**** CL start ****/
+	// Runs threads for Lizards
 	for(int i = 0; i < NUM_LIZARDS; i++)
 	{
-		allThreads[i](runThread, allLizards[i]);
+		allThreads[i](runThread, allLizards[i]); //error
 	}
 
+	// Runs threads for Cats
 	for(int i = 0; i < NUM_CATS; i++)
 	{
-		allThreads[i + NUM_LIZARDS](catThread, allCats[i]);
+		allThreads[i + NUM_LIZARDS](catThread, allCats[i]); //error
 	}
 	/**** CL end ****/
 
@@ -710,6 +707,7 @@ int main(int argc, char **argv)
      */
 
 	/**** CL start ****/
+	//Terminates all threads and joins main thread
 	for(int i = 0; i < NUM_LIZARDS; i++)
 	{
 		allThreads[i].join();

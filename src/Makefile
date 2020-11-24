@@ -1,7 +1,7 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -ftest-coverage -fprofile-arcs -pthread
+CXXFLAGS = -std=c++11 -Wall -ftest-coverage -fprofile-arcs -pthread -lpthread -lrt
 
-OBJECTS =
+OBJECTS = semaphore.o
 
 
 lizard: lizard.o $(OBJECTS)
